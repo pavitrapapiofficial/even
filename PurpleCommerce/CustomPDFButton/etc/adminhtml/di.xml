@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- <type name="Magento\Backend\Block\Widget\Button\Toolbar">
+        <plugin name="PurpleCommerce_CustomPDFButton::pluginBefore" type="PurpleCommerce\CustomPDFButton\Plugin\PluginBefore" />
+    </type> -->
+    <type name="Magento\Sales\Block\Adminhtml\Order\Invoice\View">
+        <plugin name="addMyButton" type="PurpleCommerce\CustomPDFButton\Plugin\Block\Adminhtml\Order\Invoice\View"/>
+    </type>
+    <!-- <type name="\Magento\Sales\Block\Adminhtml\Order\Invoice\View">
+        <plugin name="PurpleCommerce_CustomPDFButton::pluginBeforeView" type="PurpleCommerce\CustomPDFButton\Plugin\PluginBeforeView" />
+    </type> -->
+</config>

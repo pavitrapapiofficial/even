@@ -1,0 +1,30 @@
+<?php
+
+namespace PurpleCommerce\FailurePayment\Controller\OnePage;
+
+class Failure extends \Magento\Framework\App\Action\Action
+{
+    protected $_quoteFactory;
+    protected $_checkoutSession;
+    public function __construct(
+        \Magento\Quote\Model\QuoteFactory $quoteFactory,
+        \Magento\Checkout\Model\Session $checkoutSession
+    ){
+        $this->_quoteFactory = $quoteFactory;
+        $this->_checkoutSession = $checkoutSession;
+    }
+    public function execute()
+    {
+        
+        $order = $this->_checkoutSession->getLastRealOrder();
+        $quote = $this->_quoteFactory->create()->loadByIdWithoutStore($order->getQuoteId());
+        if ($quote->getId()) {
+            $quote->setIsActive(1)->setReservedOrderId(null)->save();
+            $this->_checkoutSession->replaceQuote($quote);
+            $resultRedirect = $this->resultRedirectFactory->create();
+            $resultRedirect->setPath('checkout/cart');
+            $this->messageManager->addWarningMessage('Payment Failed.');
+            return $resultRedirect;
+        }
+    }
+}

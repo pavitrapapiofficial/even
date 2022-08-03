@@ -1,0 +1,42 @@
+{
+  "name": "purplecommerce/getvarientdetails",
+  "description": "A module which allow to add Gift cards as item and purchase from frontend",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "keywords": [
+      "magento 2",
+      "magento",
+      "Giftcard",
+      "Gift Card",
+      "Gift Certificate",
+      "upload Gift Card",
+      "add Gift Card",
+      "how to add gift cards in magento 2"
+  ],
+  "config": {
+    "allow-plugins": {
+      "magento/*": true,
+      "laminas/*": true,
+      "cweagans/composer-patches": true
+    }
+  },
+  "type": "magento2-module",
+  "version": "1.0.2",
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "authors": [
+      {
+          "name": "Manisha Sain",
+          "email": "manisha.sain@purplecommerce.com",
+          "role": "Magento 2 Developer."
+      }
+  ],
+  "autoload": {
+    "files": [ "registration.php" ],
+    "psr-4": {
+      "PurpleCommerce\\GetVarientDetails\\": ""
+    }
+  }
+}

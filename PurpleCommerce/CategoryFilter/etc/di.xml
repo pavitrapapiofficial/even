@@ -1,0 +1,10 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!-- Use getAttributeUsedForSortByArray to include all plugins from there -->
+    <!-- app\code\PurpleCommerce\CategoryFilter\etc\di.xml -->
+    <preference for="Magento\Catalog\Model\Config\Source\ListSort" type="PurpleCommerce\CategoryFilter\Model\Config\Source\ListSource"/>
+    <preference for="Magento\Catalog\Model\Category\Attribute\Source\Sortby" type="PurpleCommerce\CategoryFilter\Model\Category\Attribute\Source\Sortby"/>
+    <preference for="Magento\Catalog\Block\Product\ProductList\Toolbar" type="PurpleCommerce\CategoryFilter\Block\Product\ProductList\Toolbar" />
+    <type name="Magento\Catalog\Model\Config">
+        <plugin name="vendor_module" type="PurpleCommerce\CategoryFilter\Plugin\Catalog\Model\Config" />
+    </type>
+</config>

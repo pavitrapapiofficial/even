@@ -1,0 +1,14 @@
+<?php
+
+/* @var $block \Magento\Framework\View\Element\Template */
+$productIds = [68, 100, 308]; // this may come from request, or query.. for instance select entity_id from catalog_product_entity where type_id='configurable' limit 30;
+/** @var \Mbs\ProductListWithImage\ViewModel\OrderHistoryItems $viewModel */
+$viewModel = $block->getData('viewModel');
+$items = $viewModel->getItems($productIds);
+?>
+<?php $total = $items->getSize() ?>
+<?php if ($total) :?>
+    <?php foreach ($items as $item) :?>
+        <?= $viewModel->getImageHtml($item);  ?>
+    <?php endforeach; ?>
+<?php endif; ?>

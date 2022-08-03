@@ -1,0 +1,541 @@
+<?php
+    $current = time();
+?>
+<style>
+    .footer-static-container{
+        display:none !important;
+    }
+    .whatapp-btn,#mageplaza-betterpopup-block,.copyright{
+        display:none !important;
+    }
+    main#maincontent.simplepage {
+        display: block;
+        margin-top: 50px;
+        max-width: 1120px !important;
+    }
+</style>
+
+<body onload="passwordCheck()">
+
+<div id="none">
+<?php
+
+
+    // if( isset($_POST['invoId']) ){
+        
+        // $invoi= $_POST['invoId'];
+        $getData = base64_decode($_GET['id']);
+
+        $arr = explode("#", $getData, 2);
+        $invoi = $arr[1];
+
+        $timestamp = $arr[0];
+        $digits = 2;
+        $r = rand(pow(10, $digits-1), pow(10, $digits)-1);
+        $timestamp = $arr[0]+$r;
+        $next15min = $timestamp+300;
+
+       
+        // echo "<br>".$timestamp."<br>".$current;
+        if($next15min>$current || $_GET['id']==''){
+
+        
+
+        // Calling Block 
+        $blockObj= $block->getLayout()->createBlock('PurpleCommerce\PDFInvoice\Block\Index');
+
+        //Get Auth/Admin User
+        $auth = $blockObj->getCurrentUser();
+        // var_dump($auth);
+        // echo $loginUser=$auth->getUser(); /*get Login user detail*/
+
+        // echo $loginUserRole=$loginUser->getRole();/*get Login user Role*/
+        //Invoice Object
+        // echo $invoi;
+        $_val = $blockObj->getInvoiceData($invoi);
+
+        //Order details
+        $orderVal = $blockObj->getOrderData($invoi);
+        $oid = $_val->getData('order_id');
+
+        //order Redpository
+        $orderRepo = $blockObj->getOrderRepo($oid);
+
+
+        $shipping = $orderVal->getShippingAddress(); 
+        $payment = $orderVal->getPayment();
+        $billing = $orderVal->getBillingAddress();
+        $street = $shipping->getStreet();
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $codval = $objectManager->create('Brandung\CashOnDeliveryFee\Helper\Data')->getConfig('payment/cashondelivery/fee');
+        //Get Financial Year
+        if (date('m') <= 6) {
+            $financial_year = (date('y')-1) . '-' . date('y');
+        } else {
+            $financial_year = date('y') . '-' . (date('y') + 1);
+        }
+        
+        $OrderArray = $orderRepo->getStoredData();
+        $orderItems = $orderRepo->getAllVisibleItems();
+        $orderDate = $_val->getData('created_at');
+
+        $newDate = $blockObj->getConvertedDate($orderDate);
+        
+
+        // foreach($orderRepo->getAllItems() as $item1){
+        //     var_dump($item1->getData());                    
+        // }
+        
+        // if($OrderArray['store_currency_code']=='INR'){
+        //     $currencyCode = '&#8377; ';
+        // }
+
+
+        if(strpos($OrderArray['shipping_description'], 'Standard') !== false){
+            $delivery = 'Standard Delivery';
+        }else{
+            $delivery = $OrderArray['shipping_description'];
+        }
+
+
+        if($_val->getData('store_currency_code')=='INR'){
+            $currencyCode = '&#8377; ';
+        }else if($_val->getData('store_currency_code')=='USD'){
+            $currencyCode = '&#36; ';
+        }else{
+            $currencyCode = '&#36; ';
+        }
+
+        // echo "Invoice Data<br/>";
+        // var_dump($_val);
+        // echo "---------------<br>";
+
+        // echo "order Data<br/>";
+        // var_dump($orderVal);
+        // echo "---------------<br>";
+
+        // echo "order repository<br/>";
+        // var_dump($orderRepo);
+        // echo "---------------<br>";
+
+        // echo "Payment Data<br/>";
+        // var_dump($payment);
+        // echo "---------------<br>";
+
+        // echo "billing Data<br/>";
+        // var_dump($billing);
+        // echo "---------------<br>";
+
+
+
+        // print_r($payment['additional_information']);
+        // die;
+
+        if(!empty($payment['additional_information'])){
+            $CODfee = 50;
+            $payMethod = 'COD';
+        }else{
+            $CODfee = 0;
+        }
+
+        $amt = $_val->getData('base_grand_total');
+        $amountinwords = $blockObj->getAmountInWords($amt);
+
+        $storeInformation = $objectManager->create('Magento\Store\Model\Information');
+        $store = $objectManager->create('Magento\Store\Model\Store');
+        
+        $storeInfo = $storeInformation->getStoreInformationObject($store);
+        $StoreRegionCode = $storeInfo->getRegionId();
+
+        
+        // echo   $region = $objectManager->create('Magento\Directory\Model\ResourceModel\Region\Collection')
+        //                 ->addFieldToFilter('region_id', ['eq' => $regionId])
+        //                 ->getFirstItem();
+         
+        // echo $region;
+        //shipping_method, shipping_description
+        // exit;
+        $taxx = $_val->getData('base_tax_amount')+(0.18*$CODfee/1.18);
+        $taxx = number_format($taxx,2);
+        $region =$shipping->getData('region');
+
+        $IGST;
+        $wIGST;
+        $CGST;
+        $wCGST;
+        $SGST;
+        $wSGST;
+        if($billing->getData('region')=='Haryana'){
+            $billingRegionCode = 545;
+        }else{
+            $billingRegionCode=0;
+        }
+        
+        
+    //    }
+    // print_r("seems ryt".$CODfee);
+    // die;
+       ?> 
+       <?php
+    //    foreach($orderRepo->getAllVisibleItems() as $item){
+    //                             echo "order item data ".$item->getSku().'<br/>';
+    //                             var_dump($item);
+    //                             echo "<br/>";
+    //                         }
+                            ?>
+       <table border="1px"  width="794px !important">
+        <tr colspan="2">
+            <td>
+                <?php echo $this->getLayout()
+            ->createBlock('Magento\Cms\Block\Block')
+            ->setBlockId('invoice_header')
+            ->toHtml();?>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    
+                    <tr>
+                        <td class="nopadding">
+                            Invoice No: SI/<?php echo 'FY'.$financial_year.'/'.$_val->getData('increment_id').'<br/>'; ?>
+                            Invoice Date: <?php echo $newDate.'<br/>';?>
+                            Order No:  <?php echo $OrderArray['increment_id'].'<br/>';?>
+                            Order Date: <?php echo $blockObj->getConvertedDate($OrderArray['created_at']). '<br/>';?>
+                            
+
+                        </td>
+                        <td class="nopadding">
+                            Tax is payable on reverse charge : NO
+                        
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td class="nopadding"><b>BILLED TO</b></td>
+                        <td class="nopadding"><b>SHIPPED TO</b></td>
+                    </tr>
+                    <tr>
+                        <td class="nopadding">
+                            Name: <?php echo $billing->getData('firstname'). ' ' . $billing->getData('lastname').'<br/>'; ?>
+                            ADDRESS: <?php echo $billing->getData('street').'<br/>';?>
+                            CITY:  <?php echo $billing->getData('city').'<br/>';?>
+                            STATE: <?php echo $billing->getData('region'). ', ' . $billing->getData('postcode').'<br/>';?>
+                            GSTIN:  NA
+
+                        </td>
+                        <td class="nopadding">
+                            Name: <?php echo $shipping->getData('firstname'). ' ' . $shipping->getData('lastname').'<br/>'; ?>
+                            ADDRESS: <?php echo $shipping->getData('street').'<br/>';?>
+                            CITY:  <?php echo $shipping->getData('city').'<br/>';?>
+                            STATE: <?php echo $shipping->getData('region'). ', ' . $shipping->getData('postcode').'<br/>';?>
+                            GSTIN:  NA
+                        
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td class="nopadding" style="text-align:center"><b>PAYMENT METHOD</b></td>
+                        <td class="nopadding" style="text-align:center"><b>SHIPPING METHOD</b></td>
+                    </tr>
+                    <tr>
+                        <td class="nopadding" style="text-align:center">
+                            <?php //echo $payment['additional_information']['method_title'];?>
+                        </td>
+                        <td class="nopadding" style="text-align:center">
+                            <?php echo $delivery.'-'. $currencyCode.number_format($_val->getData('shipping_incl_tax'),2);?>
+                        
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td cellspacing="0" cellpadding="0" style="padding:0;border:1px solid #808080">
+                <table border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td class="centerwithBorder"><b>SN.</b></td>
+                        <td class="centerwithBorder"><b>Good's Description</b></td>
+                        <td class="centerwithBorder"><b>SKU</b></td>
+                        <td class="centerwithBorder"><b>HSN</b></td>
+
+                        <td class="centerwithBorder"><b>Unit Rate</b></td>
+                        <td class="centerwithBorder"><b>GST%</b></td>
+                        <td class="centerwithBorder"><b>Unit Rate with Tax</b></td>
+                        <td class="centerwithBorder"><b>QTY</b></td>
+                        <td class="centerwithBorder"><b>Tax</b></td>
+
+                        <!-- <td class="centerwithBorder"><b>MRP</b></td> -->
+                        <!-- <td class="centerwithBorder"><b>Discount</b></td> -->
+                        <!-- <td class="centerwithBorder"><b>Rate</b></td> -->
+                        <td style="text-align:center;border-bottom:1px solid #808080;min-width:50px"><b>Amount</b></td>
+                    </tr>
+                    
+                        <?php 
+                            $count = 0;
+                            $taxableAmt = 0;
+                            $grosstotal=0;
+                            $totaltax=0;
+                            foreach($orderRepo->getAllVisibleItems() as $item){
+                                // echo "order item data ".$item->getSku().'<br/>';
+                                
+                                // echo "<pre>";
+                                // var_dump($item);
+                                
+                                $options = $item->getProductOptions();
+                                $lbl = $options['attributes_info'][0]['label'];
+                                $val = $options['attributes_info'][0]['value'];
+                                $swatch ='<b>'.$lbl.'</b> '.$val;
+                                $count++;
+                                $rate = (1-($item->getDiscountPercent()/100))*($item->getBasePriceInclTax()/(1+($item->getTaxPercent()/100)));
+                                $dis = $item->getOriginalPrice() - $item->getPrice();
+                                $discountamount = $item->getDiscountAmount();
+                                $taxableAmt += floor($item->getQtyInvoiced())*$rate; 
+                                $originalPrice = $item->getBaseOriginalPrice();
+                                $diff = floatval($item->getPrice())-floatval($discountamount);
+                                
+                                $priceInclTax = $diff;
+                                
+                                $gst='';$perc='';
+                                if($originalPrice>$priceInclTax){
+                                    $originalPrice = '<s>'.number_format($originalPrice,2).'</s><br>'.number_format($priceInclTax,2);
+                                }
+                                if(floatval($priceInclTax) < floatval(1050.00)){
+                                    $gst = 5;
+                                    $perc = 1.05;
+                                    $pgst = 0.05;
+                                }else{
+                                    $gst = 12;
+                                    $perc = 1.12;
+                                    $pgst = 0.12;
+                                }
+                                // die;
+                                // $d=1+$perc;
+                                // echo $count;
+                                
+                                // echo "<br>GST- ".$gst.' <br> Percent- '.$perc.''.$priceInclTax;
+                                $unitrate = floatval($priceInclTax) / floatval($perc);
+                                // die;
+                                $taxval = floatval($unitrate)*floatval($pgst)*floatval($item->getQtyOrdered());
+                                // echo "<br>sww- ".$swatch."<br><br><br><br>";
+                                //  die;
+                                // echo $count.'<br>';
+                                // echo "discountamount - ".$discountamount.'<br>';
+                                // echo "unit rate with tax - ".$priceInclTax.'<br>';
+                                // echo "originalPrice - ".$item->getBaseOriginalPrice().'<br>';
+                                // echo "unitrate - ".$unitrate.'<br>';
+                                // echo "taxval - ".$taxval.'<br>';
+                                // echo "Price - ".$item->getPrice().'<br>';
+                                // echo "discount(OP-Price) - ".$dis.'<br>';
+                                // echo "GST - ".$gst.'<br><br><br>';
+                                ?>
+                                <tr>
+                                
+                                <td class="width5withborder" style="width:5%;" ><?php echo $count;?></td>
+                                <td style="width:30%;border-right:1px solid #808080"><?php echo $block->escapeHtml($item->getName());?><br><?php echo $swatch;?></td>
+                                <td class="width5withborder"><?php echo $item->getSku();?></td>
+                                <td class="width5withborder txtRgt">19011010</td>
+
+                                <td class="width5withborder txtRgt" style="width:8%;" ><b><?php echo number_format($unitrate,2);?></b></td>
+                                <td class="width5withborder txtRgt" style="width:5%;"><?php echo floor($gst).'%';?></td>
+                                <td class="width5withborder txtRgt" style="width:8%;"><b><?php echo number_format($priceInclTax,2);?></b></td>
+                                <td class="width5withborder txtRgt" style="width:5%;"><?php echo floor($item->getQtyOrdered());?></td>
+                                <td class="width5withborder txtRgt" style="width:5%;" ><b><?php echo number_format($taxval,2);?></b></td>
+
+
+                                
+                                <!-- <td class="width5withborder txtRgt">
+                                <?php //echo $currencyCode.$originalPrice;?>
+                                </td> -->
+                                
+                                <!-- <td class="width5withborder txtRgt" style="width:5%;"><?php //echo $dis ;//echo floor($item->getDiscountPercent()).'%';?></td> -->
+                                <!-- <td class="width5withborder txtRgt"> <?php //echo $currencyCode.number_format($priceInclTax,2);?></td> -->
+                                <?php
+                                    $totaltax += $taxval;
+                                    $grosstotal += $item->getQtyInvoiced()*$priceInclTax;
+                                ?>
+                                <td class="width5withborder txtRgt" style="width:50px"><?php echo $currencyCode.number_format($item->getQtyInvoiced()*$priceInclTax,2);?></td>
+                                </tr>
+                                <?php
+                                
+                            }
+                        ?>
+                    
+                    
+                </table>
+            </td>
+        </tr>
+
+
+        <?php
+            $shipCOD = $codval+ $_val->getData('base_shipping_amount');
+             $calculateTax = round($totaltax + $shipCOD * 0.15254237);
+            // die;
+            // echo $StoreRegionCode.''.$billingRegionCode;
+            // die;
+            if( $StoreRegionCode==$billingRegionCode){
+                ///   
+                $IGST = 0;
+                $wIGST = 'NIL';
+                $CGST = number_format($calculateTax/2,2);
+                $wCGST = $blockObj->getAmountInWords($CGST);
+                $SGST = number_format($calculateTax/2,2);
+                $wSGST = $blockObj->getAmountInWords($SGST);
+            }else{
+                $IGST = number_format($calculateTax,2);
+                $wIGST = $blockObj->getAmountInWords($IGST);
+                $CGST = 0;
+                $SGST = 0; 
+                $wCGST = 'NIL';
+                $wSGST = 'NIL';
+            }
+            // die;
+        ?>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td class="nopadding balign">
+                            SGST : <?php echo $wSGST;?>
+                            <br>
+                            CGST : <?php echo $wCGST;?>
+                            <br>
+                            IGST : <?php echo $wIGST;?>
+                            <br>
+                            TOTAL: <?php echo $amountinwords.' only';?>
+                        
+                        </td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td class="nopadding">Sub Total</td>
+                                    <td class="txtRgt nopadding"><?php echo number_format($grosstotal,2);?></td>
+                                </tr>
+                                <tr>
+                                    <td class="nopadding">COD/Abatement</td>
+                                    <td class="txtRgt nopadding"><?php echo $currencyCode.number_format($codval,2);?></td>
+                                <tr>
+                                <tr>
+                                    <td class="nopadding">Shipping Charges</td>
+                                    <td class="txtRgt nopadding"><?php echo $currencyCode.number_format($_val->getData('base_shipping_amount'),2) ?></td>
+                                <tr>
+                                <!-- <tr>
+                                    <td class="nopadding" ><b>Taxable Value</b></td>
+                                    <td class="txtRgt nopadding" ><?php //echo $currencyCode.number_format($taxableAmt+($CODfee/1.18)+($_val->getData('base_shipping_amount')),2);?></td>
+                                <tr>
+                                <tr>
+                                    <td class="nopadding">Output SGST</td>
+                                    <td class="txtRgt nopadding"><?php //if($SGST==0) echo '-'; else echo $currencyCode.$SGST; ?></td>
+                                <tr>
+                                <tr>
+                                    <td class="nopadding">Output CGST</td>
+                                    <td class="txtRgt nopadding"><?php //if($CGST==0) echo '-'; else echo $currencyCode.$CGST; ?></td>
+                                <tr>
+                                <tr>
+                                    <td class="nopadding">Output IGST</td>
+                                    <td class="txtRgt nopadding"><?php //if($IGST==0) echo '-'; else echo $currencyCode.$IGST; ?></td>
+                                <tr>
+                                
+                                <tr>
+                                    <td class="nopadding">Round Off</td>
+                                    <td class="txtRgt nopadding"><?php 
+                                        // $roundOff = $amt-$taxableAmt-($SGST+$CGST+$IGST);
+                                        // $printround = $roundOff-floor($roundOff);
+                                        // echo $currencyCode.number_format($printround,2); 
+                                    ?></td>
+                                <tr> -->
+
+                                <tr>
+                                    <td class="nopadding"><b>Invoice Total</b></td>
+                                    <td class="txtRgt nopadding"><?php echo $currencyCode.number_format($amt,2); ?></td>
+                                <tr>
+                            </table>
+                        </td>
+                    <tr>
+                </table>
+                
+            </td>
+            
+        </tr>
+        <tr>
+            <td style="text-align:center">Place of Supply: <?php echo $region;?></td>
+        </tr>
+        <tr>
+            <td>
+            <?php echo $this->getLayout()
+            ->createBlock('Magento\Cms\Block\Block')
+            ->setBlockId('invoice_terms')
+            ->toHtml();?>
+
+            </td>
+            
+        </tr>
+       </table>
+    <?php   
+        }else{
+            echo "Document expired!<br>";
+            // echo "<a href='http://13.234.30.191/maltwin/admin_maltwin/'>Go to Dashboard</a>";
+
+            die;
+        }
+    ?>
+<!-- <h2>You Have Done It.<span id="response"></span></h2> -->
+</div>
+</body>
+<script>
+    require(['jquery','domReady!'], function ($) {        
+        
+        // $('.footer-customize').remove();
+        // function passwordCheck(){
+        //     var password = prompt("Generating invoice requires password.");
+        //     if (password==="maltwin123"){
+        //         $('#none').show();
+        //     } else{
+        //         while(password !=="maltwin123"){
+        //             password = prompt("Please enter the password.");
+        //         }
+        //         $('#none').show();
+        //     }
+        // }
+        
+        //  passwordCheck();
+        // window.onload=passwordCheck;
+    });
+
+</script>
+
+
+
+
+<!-- // base_original_price is MRP
+// tax_percent is tax percent
+/////Use base_price
+//Rate =  $item->getBasePrice()*(1-discountRate)
+// qty = qty_invoiced inted of qtyordered
+//amount = base_row_invoiced*(1-discountRate) 
+// shipping =base_shipping_amount
+
+
+//COD/Abatement	 = CODfee/1.18
+// taxx = base_tax_amount+(0.18*CODfee/1.18)  (can be used as)
+
+//if(shiptoState = Haryana){
+///   
+IGST = 0
+CGST = taxx/2
+SGST = taxx/2
+}else{
+    IGST = taxx
+    CGST = 0
+    SGST = 0  
+} -->

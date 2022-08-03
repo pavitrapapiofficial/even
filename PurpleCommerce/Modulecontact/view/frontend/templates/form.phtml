@@ -1,0 +1,61 @@
+<?php
+$countryList=$block->getCountries();
+$regionList=$block->getRegion();  
+// echo $block->test();
+?>
+<?php $countryBlock = $block->getLayout()->createBlock('Magento\Directory\Block\Data');?>
+
+
+<!-- <div class="container"> -->
+    <form class="form-horizontal" method="post" enctype="multipart/form-data" action="cform/index/index">
+    <div class="wedding-field required"><input type="text" required name="fname" placeholder="First Name"></div>
+    <div class="wedding-field required"><input type="text" required name="lname" placeholder="Last Name"></div>
+    <div class="wedding-field required"><input type="email" required name="email" placeholder="Email"></div>
+    <div class="wedding-field required"><input type="tel" required name="phone" placeholder="Phone"></div>
+    <div class="wedding-field required"><input type="text" required name="address" placeholder="Address"></div>
+    <div class="wedding-field required"><input type="text" required name="city" placeholder="Country"></div>
+    <div class="wedding-field required"><input type="text" required name="state" placeholder="State"></div>
+    <div class="wedding-field required"><input type="text" required name="zipcode" placeholder="Pincode"></div>
+    <div class="wedding-field required fll-width-field"><input type="text" required name="qnty" placeholder="Quantity: Estimated no.of items (min 10)"></div>
+    <div class="wedding-field required fll-width-field"><input type="tel" required name="occ" placeholder="Occasion"></div>
+    
+    <div class="wedding-field required comment"><textarea id="" cols="30" required name="comment" rows="2" placeholder="Products That You’re Interested in"></textarea></div>
+    <div class="wedding-field required fll-width-field">
+    <p class="product-form">Quantity: Estimated no.of items (Minimum 10)</p>
+    </div>
+
+        <div class="wedding-submit">
+                <!-- <button type="submit" class="btn btn-primary">SUBMIT</button> -->
+                <input type="submit" value="Submit">
+        </div>
+
+    </form>
+<!-- </div> -->
+
+<script>
+    require(['jquery'], function ($) {
+         $(document).on('change','#country',function() {
+         var param = 'country='+$('#country').val();
+            $.ajax({
+                        showLoader: true,
+                        url: '<?php /* @escapeNotVerified */ echo $block->getCountryAction(); ?>',
+                        data: param,
+                        type: "GET",
+                        dataType: 'json'
+            }).done(function (data) {
+                     $('#state').empty();
+                     if(data.value=='')
+                     {
+                        $('.field.states.required').show();
+                        $('.field.region.required').hide();
+                     }
+                     else
+                     {
+                     $('#state').append(data.value);
+                        $('.field.states.required').hide();
+                        $('.field.region.required').show();
+                     }
+            });
+        });
+    });
+</script>
